@@ -1,0 +1,252 @@
+
+--------------------------------------------------------------------------
+---------------- how does it work? ---------------------------------------
+--------------------------------------------------------------------------
+ 
+--toggling the script STANDARD settings
+----numlock
+------enable / disable norecoil settings on the fly
+--------basically every scipt is still working, it just stops pulling your mouse down
+----scrollock
+------toggle legit mode on / off
+ 
+--legit mode settings
+----if legit mode is activated, every action has a different sleep value, meaning the iРЎРЉРЎРЉРЎРЉnputs aren't exact, thus legit
+------lets say legit_mode_percent is 40
+------in the script a button is pressed for 50ms (sleep value)
+------the sleep value is changed to a random value between 50 and 50*1.40
+--------instead of the mouse button being pressed for 50ms every time, it is pressed for a random value is generated between 50ms and 70ms
+----this affectes pretty much every action in this script, including norecoil and how much the mouse is being pulled down
+---->why would you even have a script if the numbers are random anyway
+-------because it is not as unreliable as you think. especially if the the legit_mode_percent is really low
+ 
+--norecoil
+----hold down right mouse button
+----press / hold left mouse button
+------"q" is being pressed 1 time for battlefield tagging
+--------this means that the next action is being delayed because of the sleep value
+------depending on the settings, your mouse is pulled down
+--------the lower the settings, the more legit and smoother it looks
+ 
+--rapid fire
+----hold down right mouse button
+----press / hold left mouse4
+------mouse 1 is being spammed
+------depending on the settings, your mouse is pulled down
+--------the lower the settings, the more legit and smoother it looks
+ 
+--burst
+----hold down right mouse button
+----press / hold left mouse5
+------mouse 1 is pushed for the configured time
+------a delay sets in, causing the recoil to fall back
+------repeat
+ 
+--quickscope
+-----press mouse5
+-------mouse 2 and shift is pressed
+-------delays for the set time
+-------if it is released then it shoots and then resets itself
+ 
+--------------------------------------------------------------------------
+---------------- settings ------------------------------------------------
+-------------------------------------------------------------------------
+--scripttoggle settings to enable /disable the script on the fly
+----setting to enable to toggle the script on the fly, if false, it will always be on
+local scripttoggle = true 
+local scripttoggle_key = "numlock" --press this button to toggle the script
+ 
+----legit mode settings
+local legit_mode_toggle=true
+local legit_mode_toggle_key="scrolllock"
+local legit_mode=true
+local legit_mode_percent=7000
+local legit_mode_percent_burst=10
+local legit_mode_percent_quickscope=5
+ 
+--basic setting, how long the left mousebutton is pressed
+local lmouse_press =27
+ 
+--norecoil settings
+----disclaimer: since it only pulls your mouse down, it probably won't negate recoil perfectly
+----it only pulls your mouse down if
+------LEFT MOUSE is held down
+------RIGHT MOUSE is pressed
+----play around with these settings until perfect. 
+
+local no_recoil_predelay = 0 --change this if you only want to activate it after a certain amount of ms
+ 
+local rapid_fire = 0 --how much the mouse is being pulled down while rapid fire
+local rapid_fire_sleep = 27 --delay between every shot
+ 
+local perfectburst_press = 150 --how long the the burst lasts
+local perfectburst_sleep = 200 --delay between bursts
+ 
+--dont touch these
+local in_quickscope = 0
+local in_scope = false
+ 
+--quickscope settings
+local quickscope_sleep = 250
+ 
+ 
+--------------------------------------------------------------------------
+---------------- functions -----------------------------------------------
+--------------------------------------------------------------------------
+ 
+ 
+function get_random(arg, rand)	
+	local random_percentage=(100 + rand)/100
+	local result =  math.random(arg, arg * random_percentage)
+	OutputLogMessage(result)
+	OutputLogMessage("\n")
+	return result
+end
+ 
+function norecoil_mg4()
+	local no_recoil = 3 --how much the mouse is pulled down
+	local no_recoil_sleep = 14 --interval between how often the mouse gets pulled down
+	repeat
+		MoveMouseRelative(-1,no_recoil)
+		Sleep(no_recoil_sleep)
+	until not IsMouseButtonPressed(1)
+end
+
+function norecoil_p2000()
+	local no_recoil = 5 --how much the mouse is pulled down
+	local no_recoil_sleep = 28 --interval between how often the mouse gets pulled down
+	repeat
+		MoveMouseRelative(-0.3, no_recoil)
+		Sleep(no_recoil_sleep)
+	until not IsMouseButtonPressed(1)
+end
+ 
+function rapidfire_m16a4_ik_spo()
+	local no_recoil = 9.5 --how much the mouse is pulled down
+	local rapid_fire_sleep = 27 --delay between every shot
+	repeat
+		PressMouseButton(1)
+		Sleep(rapid_fire_sleep)
+		ReleaseMouseButton(1)
+		MoveMouseRelative(-1.2, no_recoil)
+		Sleep(rapid_fire_sleep)
+	until not IsMouseButtonPressed(5)
+end
+ 
+function rapidfire_an94()
+	local no_recoil = 13 --how much the mouse is pulled down
+	local rapid_fire_sleep = 30 --delay between every shot
+	repeat
+		PressMouseButton(1)
+		Sleep(rapid_fire_sleep)
+		ReleaseMouseButton(1)
+		MoveMouseRelative(-1, no_recoil)
+		Sleep(rapid_fire_sleep)
+	until not IsMouseButtonPressed(5)
+end
+
+function perfectburst()
+	if(legit_mode==false)then
+		repeat
+			PressMouseButton(1)
+			MoveMouseRelative(0,no_recoil)
+			Sleep(perfectburst_press)
+			ReleaseMouseButton(1)
+			MoveMouseRelative(0,no_recoil)
+			Sleep(perfectburst_sleep)
+		until not IsMouseButtonPressed(5)
+	else
+		repeat
+			PressMouseButton(1)
+			MoveMouseRelative(0,no_recoil)
+			Sleep(get_random(perfectburst_press, legit_mode_percent/5))
+			ReleaseMouseButton(1)
+			MoveMouseRelative(0,no_recoil)
+			Sleep(get_random(perfectburst_sleep, legit_mode_percent/5))
+		until not IsMouseButtonPressed(5)
+	end		
+end
+ 
+--------------------------------------------------------------------------
+----------------OnEvent---------------------------------------------------
+--------------------------------------------------------------------------
+ 
+function OnEvent(event, arg)
+	
+	if (IsKeyLockOn(scripttoggle_key) == false and scripttoggle) then
+        EnablePrimaryMouseButtonEvents(false)
+	else 
+		EnablePrimaryMouseButtonEvents(true)
+	end
+	
+	--legit_mode_toggle
+	if (IsKeyLockOn(legit_mode_toggle_key)) then
+        		legit_mode=true
+	else 
+		legit_mode=false
+	end
+	
+	--function to check if mouse button 2 is pressed. necessary for quickscope and logging
+	if (event == "MOUSE_BUTTON_PRESSED" and arg == 2) then
+		ClearLog()
+		
+		if(legit_mode) then
+			
+			OutputLogMessage("legit mode enabled")
+			OutputLogMessage("\n")
+		end
+		
+		in_scope = true
+		OutputLogMessage("in_scope: ")
+		OutputLogMessage(tostring(in_scope))
+		OutputLogMessage("\n")
+	end	
+	if (event == "MOUSE_BUTTON_RELEASED" and arg == 2) then
+		
+		in_scope = false
+		OutputLogMessage("in_scope: ")
+		OutputLogMessage(tostring(in_scope))
+		OutputLogMessage("\n")
+	end
+ 
+	--No Recoil Script
+	if (IsMouseButtonPressed(1) and IsMouseButtonPressed(3)) then
+		OutputLogMessage("no recoil;\n ")
+		norecoil_p2000()
+	
+	--Rapid Fire Script
+	else if (IsMouseButtonPressed(5) ) then
+		OutputLogMessage("rapid fire\n")
+		rapidfire_an94()
+	
+	--Perfect Burst
+	else if IsMouseButtonPressed(4) and IsMouseButtonPressed(3) then
+		OutputLogMessage("perfect burst\n")
+		perfectburst()
+	end
+	end
+	end
+	
+	--(Quick) Scope
+	if (in_scope == false and event == "MOUSE_BUTTON_PRESSED" and arg == 5) then
+		ClearLog()
+		in_quickscope = 1
+		OutputLogMessage("quickscope in: ")
+		OutputLogMessage(in_quickscope)
+		PressMouseButton(3)
+		if(legit_mode) then Sleep(get_random(quickscope_sleep, legit_mode_percent_quickscope))
+		else Sleep(250) end
+		PressKey("lshift")		
+	else if (event == "MOUSE_BUTTON_RELEASED" and arg == 5 and not in_scope and IsKeyLockOn("numlock")) then
+		PressMouseButton(1)
+		Sleep(lmouse_press)
+		ReleaseMouseButton(1)
+ 
+		ReleaseMouseButton(3)
+		ReleaseKey("lshift")
+		OutputLogMessage("quickscope out \n")
+		OutputLogMessage("\n \n")
+		in_quickscope=0
+	end
+	end
+end
